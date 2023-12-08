@@ -22,6 +22,7 @@ extern "C" void compute()
     cudaMalloc(&d_hVel, pos_vel_size);
     cudaMalloc(&d_mass, mass_size);
 
+    //copy to device
     cudaMemcpy(d_hPos, hPos, pos_vel_size, cudaMemcpyHostToDevice);
     cudaMemcpy(d_hVel, hVel, pos_vel_size, cudaMemcpyHostToDevice);
     cudaMemcpy(d_mass, mass, mass_size, cudaMemcpyHostToDevice);
