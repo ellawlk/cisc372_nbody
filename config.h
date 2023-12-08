@@ -16,6 +16,5 @@
 #define DURATION (10*YEAR)
 #define INTERVAL DAY
 //End Configurable
-
 #define NUMENTITIES (NUMPLANETS+NUMASTEROIDS+1)
 #endif
