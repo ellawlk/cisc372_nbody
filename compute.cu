@@ -46,41 +46,35 @@ extern "C" void compute()
     cudaFree(d_mass);
 }
 
-__global__ void fill(vector3 *values, double *hPos, double *hVel, double *mass)
-{
-    // i = x's index * dimension * index in the thread
+__global__ void fill(vector3 *values, double *hPos, double *hVel, double *mass) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-
-    // j = y's index * dimension * index in the thread
     int j = blockIdx.y * blockDim.y + threadIdx.y;
 
-    // if i and j are equal, set vector to 0,0,0
-    if (i == j)
-    {
-        FILL_VECTOR(values[(i * NUMENTITIES) + j], 0, 0, 0);
-    }
-    else
-    {
-        vector3 distance;
-        for (int k = 0; k < 3; k++){
-            distance[k] = hPos[i*3 + k] - hPos[j*3 + k];
-        }
+    if (i < NUMENTITIES && j < NUMENTITIES) {
+        if (i == j) {
+            FILL_VECTOR(values[i * NUMENTITIES + j], 0, 0, 0);
+        } else {
+            vector3 distance;
+            for (int k = 0; k < 3; k++) {
+                distance[k] = hPos[i * 3 + k] - hPos[j * 3 + k];
+            }
 
-        // calculating the magnitude
-        double magnitude_sq = distance[0]*distance[0] + distance[1]*distance[1] + distance[2]*distance[2];
+            double magnitude_sq = distance[0] * distance[0] + distance[1] * distance[1] + distance[2] * distance[2];
 
-        // special case handling (==0, negative)
-        if (magnitude_sq == 0.0 || magnitude_sq < 0.0){
-            FILL_VECTOR(values[i * NUMENTITIES + j], 0.0, 0.0, 0.0);
-        }
-        else{
-            double magnitude = sqrt(magnitude_sq);
-            double accel_mag = -1 * GRAV_CONSTANT * mass[j] / magnitude_sq;
-             // fill x, y, z
-            FILL_VECTOR(values[i * NUMENTITIES + j], accel_mag * distance[0] / magnitude, accel_mag * distance[1] / magnitude, accel_mag * distance[2] / magnitude);
-        }
+            // Check for potential issues
+            double accelmag = 0.0;  // Default value
+            if (magnitude_sq != 0.0) {
+                double magnitude = sqrt(magnitude_sq);
+                accelmag = -GRAV_CONSTANT * mass[j] / magnitude_sq;
+            }
 
-            // printf("i=%d, j=%d, magnitude_sq=%f\n", i, j, magnitude_sq);
+            FILL_VECTOR(
+                values[i * NUMENTITIES + j],
+                accelmag * distance[0],
+                accelmag * distance[1],
+                accelmag * distance[2]
+            );
+        }
     }
 }
 
